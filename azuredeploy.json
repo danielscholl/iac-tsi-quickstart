@@ -47,6 +47,19 @@
       "metadata": {
         "description": "The event property that will be used as the event source's timestamp. If a value isn't specified for timestampPropertyName, or if null or empty-string is specified, the event creation time will be used."
       }
+    },
+    "timeSeriesReaderIds": {
+      "type": "array",
+      "defaultValue": [],
+      "metadata": {
+        "description": "A list of object ids of the users or applications in AAD that should have Reader access to the environment. The service principal objectId can be obtained by calling the Get-AzureRMADUser or the Get-AzureRMADServicePrincipal cmdlets. Creating an access policy for AAD groups is not yet supported."
+      }
+    },
+    "timeSeriesOwnerId": {
+      "type": "string",
+      "metadata": {
+        "description": "User Object Id to give contributor rights to the subscription used for this deployment."
+      }
     }
   },
   "variables": {
@@ -59,7 +72,10 @@
     "IotHubKeyName": "iothubowner",
     "IotHubKeyResource": "[resourceId('Microsoft.Devices/Iothubs/Iothubkeys', variables('iotHubName'), variables('iotHubKeyName'))]",
     "TsiName": "[concat('timeseries', parameters('random'))]",
-    "TsiId": "[resourceId('Microsoft.TimeSeriesInsights/Environments', variables('TsiName'))]"
+    "TsiId": "[resourceId('Microsoft.TimeSeriesInsights/Environments', variables('TsiName'))]",
+    "TsiContributors":  [
+      "[parameters('servicePrincipalAppId']"
+    ]
   },
   "resources": [
     {
@@ -145,6 +161,45 @@
           }
         }
       ]
+    },
+    {
+      "comments": "## Time Series Insights Contributor Access ##",
+      "condition": "[not(empty(parameters('accessPolicyContributorObjectIds')))]",
+      "type": "Microsoft.TimeSeriesInsights/environments/accessPolicies",
+      "name": "[concat(parameters('environmentName'), '/', 'contributorAccessPolicy', copyIndex())]",
+      "copy": {
+        "name": "accessPolicyContributorCopy",
+        "count": "[if(empty(parameters('accessPolicyContributorObjectIds')), 1, length(parameters('accessPolicyContributorObjectIds')))]"
+      },
+      "apiVersion": "2018-08-15-preview",
+      "dependsOn": [
+        "[concat('Microsoft.TimeSeriesInsights/environments/', parameters('environmentName'))]"
+      ],
+      "properties": {
+        "principalObjectId": "[variables('TsiContributors')]",
+        "roles": [
+          "Contributor"
+        ]
+      }
+    },
+    {
+      "condition": "[not(empty(parameters('accessPolicyReaderObjectIds')))]",
+      "type": "Microsoft.TimeSeriesInsights/environments/accessPolicies",
+      "name": "[concat(parameters('environmentName'), '/', 'readerAccessPolicy', copyIndex())]",
+      "copy": {
+        "name": "accessPolicyReaderCopy",
+        "count": "[if(empty(parameters('accessPolicyReaderObjectIds')), 1, length(parameters('accessPolicyReaderObjectIds')))]"
+      },
+      "apiVersion": "2018-08-15-preview",
+      "dependsOn": [
+        "[concat('Microsoft.TimeSeriesInsights/environments/', parameters('environmentName'))]"
+      ],
+      "properties": {
+        "principalObjectId": "[parameters('accessPolicyReaderObjectIds')[copyIndex()]]",
+        "roles": [
+          "Reader"
+        ]
+      }
     }
   ],
   "outputs": {

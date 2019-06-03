@@ -20,22 +20,25 @@ describe('iac-tsi-quickstart', () => {
     context('defines the expected parameters', () => {
       const actual = Object.keys(template.parameters);
 
-      it('should have 5 parameters', () => actual.length.should.be.exactly(5));
+      it('should have 7 parameters', () => actual.length.should.be.exactly(7));
       it('should have a initials', () => actual.should.containEql('initials'));
       it('should have a random', () => actual.should.containEql('random'));
       it('should have a storageAccountType', () => actual.should.containEql('storageAccountType'));
       it('should have a timeSeriesId', () => actual.should.containEql('timeSeriesId'));
       it('should have a timeSeriesTimeStamp', () => actual.should.containEql('timeSeriesTimeStamp'));
+      it('should have a timeSeriesReaderIds', () => actual.should.containEql('timeSeriesReaderIds'));
+      it('should have a timeSeriesOwnerId', () => actual.should.containEql('timeSeriesOwnerId'));
     });
 
     context('creates the expected resources', () => {
       const actual = template.resources.map(resource => resource.type);
       const securityGroups = actual.filter(resource => resource === 'Microsoft.Network/networkSecurityGroups');
 
-      it('should have 3 resources', () => actual.length.should.be.exactly(3));
+      it('should have 5 resources', () => actual.length.should.be.exactly(5));
       it('should create Microsoft.Storage/storageAccounts', () => actual.should.containEql('Microsoft.Storage/storageAccounts'));
       it('should create Microsoft.Devices/IotHubs', () => actual.should.containEql('Microsoft.Devices/IotHubs'));
       it('should create Microsoft.TimeSeriesInsights/environments', () => actual.should.containEql('Microsoft.TimeSeriesInsights/environments'));
+      it('should create Microsoft.TimeSeriesInsights/environments/accessPoliciess', () => actual.should.containEql('Microsoft.TimeSeriesInsights/environments/accessPolicies'));
     });
 
     context('storage has expected properties', () => {
@@ -59,8 +62,8 @@ describe('iac-tsi-quickstart', () => {
     context('TsiEnvironment has expected properties', () => {
       const tsi = template.resources.find(resource => resource.type === 'Microsoft.TimeSeriesInsights/environments');
 
-      it('should specify L1 Preview', () => should.exist(hub.sku.name.should.be.equal("L1")));
-      it('should specify 1 Instance', () => should.exist(hub.sku.capacity.should.be.equal(1)));
+      it('should specify L1 Preview', () => should.exist(tsi.sku.name.should.be.equal("L1")));
+      it('should specify 1 Instance', () => should.exist(tsi.sku.capacity.should.be.equal(1)));
     });
 
     context('has expected output', () => {

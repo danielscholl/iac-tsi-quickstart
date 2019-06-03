@@ -14,15 +14,16 @@
 Param(
   [string]$Subscription = $env:ARM_AZURE_SUBSCRIPTION,
   [string]$Initials = "cat",
-  [string]$ResourceGroupName = "$Initials-tsi-resources",
-  [string]$Location = $env:AZURE_LOCATION
+  [string]$ResourceGroupName,
+  [string]$Location = $env:AZURE_LOCATION,
+  [string] $servicePrincipalAppId = $env:AZURE_PRINCIPAL
 )
 
 . ./.env.ps1
 Get-ChildItem Env:*AZURE*
 
 if ( !$Subscription) { throw "Subscription Required" }
-if ( !$ResourceGroupName) { throw "ResourceGroupName Required" }
+if ( !$ResourceGroupName) { $ResourceGroupName = "$Initials-tsi-resources" }
 if ( !$Location) { throw "Location Required" }
 
 
@@ -118,6 +119,22 @@ LoginAzure
 $UNIQUE = CreateResourceGroup $ResourceGroupName $Location
 ResourceProvider Microsoft.Storage
 ResourceProvider Microsoft.Devices
+ResourceProvider Microsoft.TimeSeriesInsights
+
+Write-Color -Text "Gathering Service Principal..." -Color Green
+if ($servicePrincipalAppId) {
+  $ID = $servicePrincipalAppId
+}
+else {
+  $ACCOUNT = $(Get-AzureRmContext).Account
+  if ($ACCOUNT.Type -eq 'User') {
+    $USER = Get-AzureRmADUser -UPN $(Get-AzureRmContext).Account
+    $ID = $USER.Id.Guid
+  }
+  else {
+    $ID = Read-Host 'Input your Service Principal.'
+  }
+}
 
 ##############################
 ## Deploy Template          ##
