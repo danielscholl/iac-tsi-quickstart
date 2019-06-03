@@ -23,7 +23,7 @@ steps:
 - task: AzureCLI@1
   displayName: 'npm test'
   inputs:
-    azureSubscription: 'dascholl-CAT'
+    azureSubscription: 'AzureCAT'
     scriptLocation: inlineScript
     inlineScript: |
      mkdir .test-output
