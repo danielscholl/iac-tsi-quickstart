@@ -20,18 +20,21 @@ describe('iac-tsi-quickstart', () => {
     context('defines the expected parameters', () => {
       const actual = Object.keys(template.parameters);
 
-      it('should have 3 parameters', () => actual.length.should.be.exactly(3));
+      it('should have 5 parameters', () => actual.length.should.be.exactly(5));
       it('should have a initials', () => actual.should.containEql('initials'));
       it('should have a random', () => actual.should.containEql('random'));
       it('should have a storageAccountType', () => actual.should.containEql('storageAccountType'));
+      it('should have a timeSeriesId', () => actual.should.containEql('timeSeriesId'));
+      it('should have a timeSeriesTimeStamp', () => actual.should.containEql('timeSeriesTimeStamp'));
     });
 
     context('creates the expected resources', () => {
       const actual = template.resources.map(resource => resource.type);
       const securityGroups = actual.filter(resource => resource === 'Microsoft.Network/networkSecurityGroups');
 
-      it('should have 1 resources', () => actual.length.should.be.exactly(1));
+      it('should have 2 resources', () => actual.length.should.be.exactly(2));
       it('should create Microsoft.Storage/storageAccounts', () => actual.should.containEql('Microsoft.Storage/storageAccounts'));
+      it('should create Microsoft.Devices/IotHubs', () => actual.should.containEql('Microsoft.Devices/IotHubs'));
     });
 
     context('storage has expected properties', () => {
@@ -40,8 +43,16 @@ describe('iac-tsi-quickstart', () => {
       it('should define accessTier', () => should.exist(storage.properties.accessTier));
       it('should define supportsHttpsTrafficOnly', () => should.exist(storage.properties.supportsHttpsTrafficOnly));
       it('should define isHnsEnabled', () => should.exist(storage.properties.isHnsEnabled));
+      it('should enable ADSL Gen2', () => template.variables.isHnsEnabled.should.be.true());
+      it('should enable HTTPS Only', () => template.variables.supportsHttpsTrafficOnly.should.be.true());
+    });
 
-      it('should have ADSL Gen2 Enabled', () => template.variables.isHnsEnabled.should.be.true());
+    context('IoThub has expected properties', () => {
+      const hub = template.resources.find(resource => resource.type === 'Microsoft.Devices/IotHubs');
+
+      it('should specify S3 SKU', () => should.exist(hub.sku.name.should.be.equal("S3")));
+      it('should specify Standard tier', () => should.exist(hub.sku.tier.should.be.equal("Standard")));
+      it('should specify 1 Instance', () => should.exist(hub.sku.capacity.should.be.equal(1)));
     });
 
     context('has expected output', () => {
@@ -49,6 +60,9 @@ describe('iac-tsi-quickstart', () => {
       it('should define storageAccount id', () => should.exist(template.outputs.storageAccount.value.id));
       it('should define storageAccount name', () => should.exist(template.outputs.storageAccount.value.name));
       it('should define storageAccount key', () => should.exist(template.outputs.storageAccount.value.key));
+      it('should define iotHub', () => should.exist(template.outputs.iotHub));
+      it('should define iotHub id', () => should.exist(template.outputs.iotHub.value.id));
+      it('should define iotHub keys', () => should.exist(template.outputs.iotHub.value.keys));
     });
   });
 

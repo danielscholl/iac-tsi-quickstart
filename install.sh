@@ -92,10 +92,11 @@ CreateResourceGroup $RESOURCE_GROUP $AZURE_LOCATION
 tput setaf 2; echo 'Registering Resource Provider...' ; tput sgr0
 ResourceProvider Microsoft.Storage
 
-
+DEPLOYMENT=${PWD##*/}
 
 tput setaf 2; echo 'Deploying ARM Template...' ; tput sgr0
 az group deployment create --template-file azuredeploy.json  \
+    --name $DEPLOYMENT
     --resource-group $RESOURCE_GROUP \
     --parameters azuredeploy.parameters.json \
     --parameters initials=$INITIALS --parameters random=$UNIQUE

@@ -1,7 +1,7 @@
 # Introduction
 Infrastructure as Code using ARM - Time Series Solution using ADSL Gen 2.
 
-
+[![Build Status](https://dascholl.visualstudio.com/IoT/_apis/build/status/danielscholl.iac-tsi-quickstart?branchName=master)](https://dascholl.visualstudio.com/IoT/_build/latest?definitionId=28&branchName=master)
 
 
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fdanielscholl%2Fiac-tsi-quickstart%2Fmaster%2Fazuredeploy.json" target="_blank">
