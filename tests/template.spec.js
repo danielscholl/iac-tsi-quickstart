@@ -57,8 +57,10 @@ describe('iac-tsi-quickstart', () => {
     });
 
     context('TsiEnvironment has expected properties', () => {
-      const hub = template.resources.find(resource => resource.type === 'Microsoft.TimeSeriesInsights/environments');
+      const tsi = template.resources.find(resource => resource.type === 'Microsoft.TimeSeriesInsights/environments');
 
+      it('should specify L1 Preview', () => should.exist(hub.sku.name.should.be.equal("L1")));
+      it('should specify 1 Instance', () => should.exist(hub.sku.capacity.should.be.equal(1)));
     });
 
     context('has expected output', () => {

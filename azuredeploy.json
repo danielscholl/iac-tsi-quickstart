@@ -126,12 +126,12 @@
       "resources": [
         {
           "type": "eventSources",
-          "name": "iot_hub",
+          "name": "source_hub",
           "apiVersion": "2018-08-15-preview",
           "location": "[resourceGroup().location]",
           "kind": "Microsoft.IoTHub",
           "dependsOn": [
-            "[concat('Microsoft.TimeSeriesInsights/environments/', variables('TSIName'))]",
+            "[concat('Microsoft.TimeSeriesInsights/environments/', variables('TsiName'))]",
             "[concat('Microsoft.Devices/IotHubs/', variables('IotHubName'))]",
             "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
           ],
