@@ -50,7 +50,7 @@
     }
   },
   "variables": {
-    "storageAccountName": "[concat('storage', parameters('random')))]",
+    "storageAccountName": "[concat('tsistorage', parameters('random')))]",
     "storageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
     "isHnsEnabled": true,
     "supportsHttpsTrafficOnly": true,

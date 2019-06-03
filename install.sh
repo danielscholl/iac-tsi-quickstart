@@ -96,7 +96,7 @@ DEPLOYMENT=${PWD##*/}
 
 tput setaf 2; echo 'Deploying ARM Template...' ; tput sgr0
 az group deployment create --template-file azuredeploy.json  \
-    --name $DEPLOYMENT
+    --name $DEPLOYMENT \
     --resource-group $RESOURCE_GROUP \
     --parameters azuredeploy.parameters.json \
     --parameters initials=$INITIALS --parameters random=$UNIQUE
