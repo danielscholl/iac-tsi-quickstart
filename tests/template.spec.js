@@ -40,7 +40,8 @@ describe('iac-tsi-quickstart', () => {
       it('should define accessTier', () => should.exist(storage.properties.accessTier));
       it('should define supportsHttpsTrafficOnly', () => should.exist(storage.properties.supportsHttpsTrafficOnly));
       it('should define isHnsEnabled', () => should.exist(storage.properties.isHnsEnabled));
-      it('should have ADSL Gen2 Enabled', () => storage.properties.isHnsEnabled.should.be.true);
+
+      it('should have ADSL Gen2 Enabled', () => template.variables.isHnsEnabled.should.be.true());
     });
 
     context('has expected output', () => {

@@ -32,7 +32,7 @@
   "variables": {
     "storageAccountName": "[concat(parameters('random'), uniqueString(resourceGroup().id))]",
     "storageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
-    "isHnsEnabled": false,
+    "isHnsEnabled": true,
     "supportsHttpsTrafficOnly": false
   },
   "resources": [
