@@ -50,14 +50,16 @@
     }
   },
   "variables": {
-    "storageAccountName": "[concat('tsistorage', parameters('random')))]",
+    "storageAccountName": "[concat('tsistorage', parameters('random'))]",
     "storageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
     "isHnsEnabled": true,
     "supportsHttpsTrafficOnly": true,
-    "IotHubName": "[concat('iothub', parameters('random'), uniqueString(resourceGroup().id))]",
+    "IotHubName": "[concat('iothub', parameters('random'))]",
     "IotHubId": "[resourceId('Microsoft.Devices/IotHubs', variables('IotHubName'))]",
     "IotHubKeyName": "iothubowner",
-    "IotHubKeyResource": "[resourceId('Microsoft.Devices/Iothubs/Iothubkeys', variables('iotHubName'), variables('iotHubKeyName'))]"
+    "IotHubKeyResource": "[resourceId('Microsoft.Devices/Iothubs/Iothubkeys', variables('iotHubName'), variables('iotHubKeyName'))]",
+    "TsiName": "[concat('timeseries', parameters('random'))]",
+    "TsiId": "[resourceId('Microsoft.TimeSeriesInsights/Environments', variables('TsiName'))]"
   },
   "resources": [
     {
@@ -98,6 +100,51 @@
       },
       "properties": {
       }
+    },
+    {
+      "comments": "## Time Series Insights ##",
+      "type": "Microsoft.TimeSeriesInsights/environments",
+      "name": "[variables('TsiName')]",
+      "apiVersion": "2018-08-15-preview",
+      "location": "[resourceGroup().location]",
+      "kind": "LongTerm",
+      "dependsOn": [
+        "[concat('Microsoft.Devices/IotHubs/', variables('IotHubName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+      ],
+      "properties": {
+        "storageConfiguration": {
+          "accountName": "[variables('storageAccountName')]",
+          "managementKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2018-07-01').keys[0].value]"
+        },
+        "timeSeriesIdProperties": "[parameters('timeSeriesId')]"
+      },
+      "sku": {
+        "name": "L1",
+        "capacity": 1
+      },
+      "resources": [
+        {
+          "type": "eventSources",
+          "name": "iot_hub",
+          "apiVersion": "2018-08-15-preview",
+          "location": "[resourceGroup().location]",
+          "kind": "Microsoft.IoTHub",
+          "dependsOn": [
+            "[concat('Microsoft.TimeSeriesInsights/environments/', variables('TSIName'))]",
+            "[concat('Microsoft.Devices/IotHubs/', variables('IotHubName'))]",
+            "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+          ],
+          "properties": {
+            "eventSourceResourceId": "[variables('IotHubId')]",
+            "iotHubName": "[variables('IoTHubName')]",
+            "consumerGroupName": "iothub",
+            "keyName": "service",
+            "sharedAccessKey": "[listkeys(resourceId('Microsoft.Devices/IoTHubs/IotHubKeys', variables('IoTHubName'), 'service'), '2018-04-01').primaryKey]",
+            "timestampPropertyName": "[parameters('timeSeriesTimeStamp')]"
+          }
+        }
+      ]
     }
   ],
   "outputs": {
@@ -114,6 +161,12 @@
       "value": {
         "id": "[variables('IotHubId')]",
         "keys": "[listKeys(resourceId('Microsoft.Devices/IotHubs', variables('IotHubName')), '2016-02-03')]"
+      }
+    },
+    "tsi": {
+      "type": "object",
+      "value": {
+        "id": "[variables('TsiId')]"
       }
     }
   }

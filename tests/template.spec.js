@@ -32,9 +32,10 @@ describe('iac-tsi-quickstart', () => {
       const actual = template.resources.map(resource => resource.type);
       const securityGroups = actual.filter(resource => resource === 'Microsoft.Network/networkSecurityGroups');
 
-      it('should have 2 resources', () => actual.length.should.be.exactly(2));
+      it('should have 3 resources', () => actual.length.should.be.exactly(3));
       it('should create Microsoft.Storage/storageAccounts', () => actual.should.containEql('Microsoft.Storage/storageAccounts'));
       it('should create Microsoft.Devices/IotHubs', () => actual.should.containEql('Microsoft.Devices/IotHubs'));
+      it('should create Microsoft.TimeSeriesInsights/environments', () => actual.should.containEql('Microsoft.TimeSeriesInsights/environments'));
     });
 
     context('storage has expected properties', () => {
@@ -55,6 +56,11 @@ describe('iac-tsi-quickstart', () => {
       it('should specify 1 Instance', () => should.exist(hub.sku.capacity.should.be.equal(1)));
     });
 
+    context('TsiEnvironment has expected properties', () => {
+      const hub = template.resources.find(resource => resource.type === 'Microsoft.TimeSeriesInsights/environments');
+
+    });
+
     context('has expected output', () => {
       it('should define storageAccount', () => should.exist(template.outputs.storageAccount));
       it('should define storageAccount id', () => should.exist(template.outputs.storageAccount.value.id));
@@ -63,6 +69,8 @@ describe('iac-tsi-quickstart', () => {
       it('should define iotHub', () => should.exist(template.outputs.iotHub));
       it('should define iotHub id', () => should.exist(template.outputs.iotHub.value.id));
       it('should define iotHub keys', () => should.exist(template.outputs.iotHub.value.keys));
+      it('should define tsiEnvironment', () => should.exist(template.outputs.tsi));
+      it('should define tsiEnvironment id', () => should.exist(template.outputs.tsi.value.id));
     });
   });
 

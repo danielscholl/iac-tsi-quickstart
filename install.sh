@@ -91,6 +91,7 @@ CreateResourceGroup $RESOURCE_GROUP $AZURE_LOCATION
 
 tput setaf 2; echo 'Registering Resource Provider...' ; tput sgr0
 ResourceProvider Microsoft.Storage
+ResourceProvider Microsoft.Devices
 
 DEPLOYMENT=${PWD##*/}
 

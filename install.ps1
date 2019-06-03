@@ -74,7 +74,7 @@ function LoginAzure() {
     }
   }
   Set-AzureRmContext -SubscriptionId ${Subscription} | Out-null
-  
+
 }
 
 function CreateResourceGroup([string]$ResourceGroupName, [string]$Location) {
@@ -117,6 +117,7 @@ LoginAzure
 
 $UNIQUE = CreateResourceGroup $ResourceGroupName $Location
 ResourceProvider Microsoft.Storage
+ResourceProvider Microsoft.Devices
 
 ##############################
 ## Deploy Template          ##
