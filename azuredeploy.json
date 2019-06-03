@@ -1,0 +1,71 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "initials": {
+      "type": "string",
+      "metadata": {
+        "description": "Small unique string."
+      }
+    },
+    "random": {
+      "type": "int",
+      "metadata": {
+        "description": "3 Digit Random Integer"
+      },
+      "minValue": 100,
+      "maxValue": 999
+    },
+    "storageAccountType": {
+      "type": "string",
+      "metadata": {
+        "description": "Account type, premium vs standard, and local, global redundancy"
+      },
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_GRS",
+        "Premium_LRS"
+      ]
+    }
+  },
+  "variables": {
+    "storageAccountName": "[concat(parameters('random'), uniqueString(resourceGroup().id))]",
+    "storageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
+    "isHnsEnabled": false,
+    "supportsHttpsTrafficOnly": false
+  },
+  "resources": [
+    {
+      "comments": "## Storage Account ##",
+      "name": "[variables('storageAccountName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2018-07-01",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "environment": "test",
+        "contact": "[parameters('initials')]"
+      },
+      "kind": "StorageV2",
+      "sku": {
+        "name": "[parameters('storageAccountType')]",
+        "tier": "Standard"
+      },
+      "properties": {
+        "accessTier": "Hot",
+        "supportsHttpsTrafficOnly": "[variables('supportsHttpsTrafficOnly')]",
+        "isHnsEnabled": "[variables('isHnsEnabled')]"
+      }
+    }
+  ],
+  "outputs": {
+    "storageAccount": {
+      "type": "object",
+      "value": {
+        "id": "[variables('storageId')]",
+        "name": "[variables('storageAccountName')]",
+        "key": "[listKeys(variables('storageId'), '2016-01-01').keys[0].value]"
+      }
+    }
+  }
+}
