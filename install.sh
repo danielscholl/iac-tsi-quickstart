@@ -94,11 +94,15 @@ ResourceProvider Microsoft.Storage
 ResourceProvider Microsoft.Devices
 ResourceProvider Microsoft.TimeSeriesInsights
 
+tput setaf 2; echo 'Retrieving Creator Object Id...' ; tput sgr0
 DEPLOYMENT=${PWD##*/}
+USER_ID=$(az ad user show \
+        --upn-or-object-id $(az account show --query user.name -otsv) \
+        --query objectId -otsv)
 
 tput setaf 2; echo 'Deploying ARM Template...' ; tput sgr0
 az group deployment create --template-file azuredeploy.json  \
     --name $DEPLOYMENT \
     --resource-group $RESOURCE_GROUP \
-    --parameters azuredeploy.parameters.json \
+    --parameters timeSeriesOwnerId=$USER_ID \
     --parameters initials=$INITIALS --parameters random=$UNIQUE

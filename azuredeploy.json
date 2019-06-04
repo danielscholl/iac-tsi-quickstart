@@ -6,7 +6,8 @@
       "type": "string",
       "metadata": {
         "description": "Small unique string."
-      }
+      },
+      "defaultValue": "cat"
     },
     "random": {
       "type": "int",
@@ -14,7 +15,8 @@
         "description": "3 Digit Random Integer"
       },
       "minValue": 100,
-      "maxValue": 999
+      "maxValue": 999,
+      "defaultValue": 999
     },
     "storageAccountType": {
       "type": "string",
@@ -48,39 +50,45 @@
         "description": "The event property that will be used as the event source's timestamp. If a value isn't specified for timestampPropertyName, or if null or empty-string is specified, the event creation time will be used."
       }
     },
-    "timeSeriesReaderIds": {
+    "accessPolicyReaderObjectIds": {
       "type": "array",
       "defaultValue": [],
       "metadata": {
         "description": "A list of object ids of the users or applications in AAD that should have Reader access to the environment. The service principal objectId can be obtained by calling the Get-AzureRMADUser or the Get-AzureRMADServicePrincipal cmdlets. Creating an access policy for AAD groups is not yet supported."
       }
     },
+    "accessPolicyContributorObjectIds": {
+      "type": "array",
+      "defaultValue": [],
+      "metadata": {
+        "description": "A list of object ids of the users or applications in AAD that should have Contributor access to the environment. The service principal objectId can be obtained by calling the Get-AzureRMADUser or the Get-AzureRMADServicePrincipal cmdlets. Creating an access policy for AAD groups is not yet supported."
+      }
+    },
     "timeSeriesOwnerId": {
       "type": "string",
       "metadata": {
         "description": "User Object Id to give contributor rights to the subscription used for this deployment."
-      }
+      },
+      "defaultValue": ""
     }
   },
   "variables": {
-    "storageAccountName": "[concat('tsistorage', parameters('random'))]",
-    "storageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
-    "isHnsEnabled": true,
-    "supportsHttpsTrafficOnly": true,
+    "StorageAccountName": "[concat('tsistorage', parameters('random'))]",
+    "StorageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('StorageAccountName'))]",
+    "IsHnsEnabled": false,
+    "SupportsHttpsTrafficOnly": false,
     "IotHubName": "[concat('iothub', parameters('random'))]",
     "IotHubId": "[resourceId('Microsoft.Devices/IotHubs', variables('IotHubName'))]",
     "IotHubKeyName": "iothubowner",
     "IotHubKeyResource": "[resourceId('Microsoft.Devices/Iothubs/Iothubkeys', variables('iotHubName'), variables('iotHubKeyName'))]",
+    "ConsumerGroup": "[concat(variables('iotHubName'), '/events/tsi')]",
     "TsiName": "[concat('timeseries', parameters('random'))]",
-    "TsiId": "[resourceId('Microsoft.TimeSeriesInsights/Environments', variables('TsiName'))]",
-    "TsiContributors":  [
-      "[parameters('servicePrincipalAppId']"
-    ]
+    "TsiId": "[resourceId('Microsoft.TimeSeriesInsights/Environments', variables('TsiName'))]"
   },
   "resources": [
     {
       "comments": "## Storage Account ##",
-      "name": "[variables('storageAccountName')]",
+      "name": "[variables('StorageAccountName')]",
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2018-07-01",
       "location": "[resourceGroup().location]",
@@ -95,8 +103,8 @@
       },
       "properties": {
         "accessTier": "Hot",
-        "supportsHttpsTrafficOnly": "[variables('supportsHttpsTrafficOnly')]",
-        "isHnsEnabled": "[variables('isHnsEnabled')]"
+        "supportsHttpsTrafficOnly": "[variables('SupportsHttpsTrafficOnly')]",
+        "isHnsEnabled": "[variables('IsHnsEnabled')]"
       }
     },
     {
@@ -126,12 +134,12 @@
       "kind": "LongTerm",
       "dependsOn": [
         "[concat('Microsoft.Devices/IotHubs/', variables('IotHubName'))]",
-        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+        "[concat('Microsoft.Storage/storageAccounts/', variables('StorageAccountName'))]"
       ],
       "properties": {
         "storageConfiguration": {
-          "accountName": "[variables('storageAccountName')]",
-          "managementKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2018-07-01').keys[0].value]"
+          "accountName": "[variables('StorageAccountName')]",
+          "managementKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('StorageAccountName')), '2018-07-01').keys[0].value]"
         },
         "timeSeriesIdProperties": "[parameters('timeSeriesId')]"
       },
@@ -142,19 +150,19 @@
       "resources": [
         {
           "type": "eventSources",
-          "name": "source_hub",
+          "name": "[variables('IotHubName')]",
           "apiVersion": "2018-08-15-preview",
           "location": "[resourceGroup().location]",
           "kind": "Microsoft.IoTHub",
           "dependsOn": [
             "[concat('Microsoft.TimeSeriesInsights/environments/', variables('TsiName'))]",
             "[concat('Microsoft.Devices/IotHubs/', variables('IotHubName'))]",
-            "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+            "[concat('Microsoft.Storage/storageAccounts/', variables('StorageAccountName'))]"
           ],
           "properties": {
             "eventSourceResourceId": "[variables('IotHubId')]",
             "iotHubName": "[variables('IoTHubName')]",
-            "consumerGroupName": "iothub",
+            "consumerGroupName": "[variables('ConsumerGroup')]",
             "keyName": "service",
             "sharedAccessKey": "[listkeys(resourceId('Microsoft.Devices/IoTHubs/IotHubKeys', variables('IoTHubName'), 'service'), '2018-04-01').primaryKey]",
             "timestampPropertyName": "[parameters('timeSeriesTimeStamp')]"
@@ -163,41 +171,50 @@
       ]
     },
     {
-      "comments": "## Time Series Insights Contributor Access ##",
-      "condition": "[not(empty(parameters('accessPolicyContributorObjectIds')))]",
-      "type": "Microsoft.TimeSeriesInsights/environments/accessPolicies",
-      "name": "[concat(parameters('environmentName'), '/', 'contributorAccessPolicy', copyIndex())]",
-      "copy": {
-        "name": "accessPolicyContributorCopy",
-        "count": "[if(empty(parameters('accessPolicyContributorObjectIds')), 1, length(parameters('accessPolicyContributorObjectIds')))]"
-      },
-      "apiVersion": "2018-08-15-preview",
+      "comments": "## Consumer Group ##",
+      "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
+      "apiVersion": "2018-04-01",
+      "name": "[variables('ConsumerGroupName')]",
+      "properties": {},
       "dependsOn": [
-        "[concat('Microsoft.TimeSeriesInsights/environments/', parameters('environmentName'))]"
-      ],
-      "properties": {
-        "principalObjectId": "[variables('TsiContributors')]",
-        "roles": [
-          "Contributor"
-        ]
-      }
+        "[resourceId('Microsoft.Devices/IotHubs', variables('iotHubName'))]"
+      ]
     },
     {
       "condition": "[not(empty(parameters('accessPolicyReaderObjectIds')))]",
-      "type": "Microsoft.TimeSeriesInsights/environments/accessPolicies",
-      "name": "[concat(parameters('environmentName'), '/', 'readerAccessPolicy', copyIndex())]",
+      "type": "Microsoft.TimeSeriesInsights/environments/accesspolicies",
+      "name": "[concat(variables('TsiName'), '/', 'readerAccessPolicy', copyIndex())]",
       "copy": {
         "name": "accessPolicyReaderCopy",
         "count": "[if(empty(parameters('accessPolicyReaderObjectIds')), 1, length(parameters('accessPolicyReaderObjectIds')))]"
       },
       "apiVersion": "2018-08-15-preview",
       "dependsOn": [
-        "[concat('Microsoft.TimeSeriesInsights/environments/', parameters('environmentName'))]"
+        "[concat('Microsoft.TimeSeriesInsights/environments/', variables('TsiName'))]"
       ],
       "properties": {
         "principalObjectId": "[parameters('accessPolicyReaderObjectIds')[copyIndex()]]",
         "roles": [
           "Reader"
+        ]
+      }
+    },
+    {
+      "condition": "[not(empty(parameters('accessPolicyContributorObjectIds')))]",
+      "type": "Microsoft.TimeSeriesInsights/environments/accesspolicies",
+      "name": "[concat(variables('TsiName'), '/', 'contributorAccessPolicy', copyIndex())]",
+      "copy": {
+        "name": "accessPolicyContributorCopy",
+        "count": "[if(empty(parameters('accessPolicyContributorObjectIds')), 1, length(parameters('accessPolicyContributorObjectIds')))]"
+      },
+      "apiVersion": "2018-08-15-preview",
+      "dependsOn": [
+        "[concat('Microsoft.TimeSeriesInsights/environments/', variables('TsiName'))]"
+      ],
+      "properties": {
+        "principalObjectId": "[parameters('accessPolicyContributorObjectIds')[copyIndex()]]",
+        "roles": [
+          "Contributor"
         ]
       }
     }
@@ -206,9 +223,9 @@
     "storageAccount": {
       "type": "object",
       "value": {
-        "id": "[variables('storageId')]",
-        "name": "[variables('storageAccountName')]",
-        "key": "[listKeys(variables('storageId'), '2016-01-01').keys[0].value]"
+        "id": "[variables('StorageId')]",
+        "name": "[variables('StorageAccountName')]",
+        "key": "[listKeys(variables('StorageId'), '2016-01-01').keys[0].value]"
       }
     },
     "iotHub": {

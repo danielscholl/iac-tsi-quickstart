@@ -82,16 +82,14 @@ function CreateResourceGroup([string]$ResourceGroupName, [string]$Location) {
   # Required Argument $1 = RESOURCE_GROUP
   # Required Argument $2 = LOCATION
 
-  $group = Get-AzureRmResourceGroup -Name $ResourceGroupName
+  $group = Get-AzureRmResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
   if($group) {
     Write-Color -Text "Resource Group ", "$ResourceGroupName ", "already exists." -Color Green, Red, Green
-    return $group.Tags.RANDOM
   } else {
     Write-Host "Creating Resource Group $ResourceGroupName..." -ForegroundColor Yellow
 
-    $UNIQUE = ( Get-Random -Minimum 0 -Maximum 999 ).ToString('000')
+    $UNIQUE = Get-Random -Minimum 0 -Maximum 999
     New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -Tag @{ RANDOM=$UNIQUE; contact=$Initials }
-    return $UNIQUE
   }
 }
 
@@ -146,5 +144,6 @@ New-AzureRmResourceGroupDeployment -Name $DEPLOYMENT `
   -TemplateFile $BASE_DIR\azuredeploy.json `
   -TemplateParameterFile $BASE_DIR\azuredeploy.parameters.json `
   -initials $INITIALS `
-  -random $UNIQUE `
+  -timeSeriesOwnerId $ID `
+  -random $(Get-AzureRmResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue -WarningAction SilentlyContinue).Tags.RANDOM `
   -ResourceGroupName $ResourceGroupName
