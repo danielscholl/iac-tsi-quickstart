@@ -80,8 +80,8 @@
     "IotHubName": "[concat('iothub', parameters('random'))]",
     "IotHubId": "[resourceId('Microsoft.Devices/IotHubs', variables('IotHubName'))]",
     "IotHubKeyName": "iothubowner",
-    "IotHubKeyResource": "[resourceId('Microsoft.Devices/Iothubs/Iothubkeys', variables('iotHubName'), variables('iotHubKeyName'))]",
-    "ConsumerGroup": "[concat(variables('iotHubName'), '/events/tsi')]",
+    "IotHubKeyResource": "[resourceId('Microsoft.Devices/Iothubs/Iothubkeys', variables('iotHubName'), variables('IotHubKeyName'))]",
+    "ConsumerGroupName": "[concat(variables('iotHubName'), '/events/tsi')]",
     "TsiName": "[concat('timeseries', parameters('random'))]",
     "TsiId": "[resourceId('Microsoft.TimeSeriesInsights/Environments', variables('TsiName'))]"
   },
@@ -126,6 +126,16 @@
       }
     },
     {
+      "comments": "## Consumer Group ##",
+      "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
+      "apiVersion": "2018-04-01",
+      "name": "[variables('ConsumerGroupName')]",
+      "properties": {},
+      "dependsOn": [
+        "[resourceId('Microsoft.Devices/IotHubs', variables('iotHubName'))]"
+      ]
+    },
+    {
       "comments": "## Time Series Insights ##",
       "type": "Microsoft.TimeSeriesInsights/environments",
       "name": "[variables('TsiName')]",
@@ -162,22 +172,12 @@
           "properties": {
             "eventSourceResourceId": "[variables('IotHubId')]",
             "iotHubName": "[variables('IoTHubName')]",
-            "consumerGroupName": "[variables('ConsumerGroup')]",
+            "consumerGroupName": "tsi",
             "keyName": "service",
             "sharedAccessKey": "[listkeys(resourceId('Microsoft.Devices/IoTHubs/IotHubKeys', variables('IoTHubName'), 'service'), '2018-04-01').primaryKey]",
             "timestampPropertyName": "[parameters('timeSeriesTimeStamp')]"
           }
         }
-      ]
-    },
-    {
-      "comments": "## Consumer Group ##",
-      "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
-      "apiVersion": "2018-04-01",
-      "name": "[variables('ConsumerGroupName')]",
-      "properties": {},
-      "dependsOn": [
-        "[resourceId('Microsoft.Devices/IotHubs', variables('iotHubName'))]"
       ]
     },
     {
@@ -200,19 +200,15 @@
       }
     },
     {
-      "condition": "[not(empty(parameters('accessPolicyContributorObjectIds')))]",
-      "type": "Microsoft.TimeSeriesInsights/environments/accesspolicies",
-      "name": "[concat(variables('TsiName'), '/', 'contributorAccessPolicy', copyIndex())]",
-      "copy": {
-        "name": "accessPolicyContributorCopy",
-        "count": "[if(empty(parameters('accessPolicyContributorObjectIds')), 1, length(parameters('accessPolicyContributorObjectIds')))]"
-      },
+      "name": "[concat(variables('TsiName'), '/', 'contributorAccessPolicy')]",
+      "type": "Microsoft.TimeSeriesInsights/environments/accessPolicies",
       "apiVersion": "2018-08-15-preview",
       "dependsOn": [
         "[concat('Microsoft.TimeSeriesInsights/environments/', variables('TsiName'))]"
       ],
       "properties": {
-        "principalObjectId": "[parameters('accessPolicyContributorObjectIds')[copyIndex()]]",
+        "principalObjectId": "[parameters('timeSeriesOwnerId')]",
+        "description": "Creator",
         "roles": [
           "Contributor"
         ]
