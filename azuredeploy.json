@@ -15,8 +15,7 @@
         "description": "3 Digit Random Integer"
       },
       "minValue": 100,
-      "maxValue": 999,
-      "defaultValue": 999
+      "maxValue": 999
     },
     "storageAccountType": {
       "type": "string",
