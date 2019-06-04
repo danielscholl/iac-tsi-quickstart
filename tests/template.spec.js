@@ -24,9 +24,27 @@ describe('iac-tsi-quickstart', () => {
       it('should have a initials', () => actual.should.containEql('initials'));
       it('should have a random', () => actual.should.containEql('random'));
       it('should have a storageAccountType', () => actual.should.containEql('storageAccountType'));
+      it('should have a enableADSLGen2', () => actual.should.containEql('enableADSLGen2'));
       it('should have a timeSeriesId', () => actual.should.containEql('timeSeriesId'));
       it('should have a timeSeriesTimeStamp', () => actual.should.containEql('timeSeriesTimeStamp'));
+      it('should have a accessPolicyReaderObjectIds', () => actual.should.containEql('accessPolicyReaderObjectIds'));
       it('should have a timeSeriesOwnerId', () => actual.should.containEql('timeSeriesOwnerId'));
+    });
+
+    context('defines the expected variables', () => {
+      const actual = Object.keys(template.variables);
+
+      it('should have 10 variables', () => actual.length.should.be.exactly(10));
+      it('should have a StorageAccountName', () => actual.should.containEql('StorageAccountName'));
+      it('should have a StorageId', () => actual.should.containEql('StorageId'));
+      it('should have a SupportsHttpsTrafficOnly', () => actual.should.containEql('SupportsHttpsTrafficOnly'));
+      it('should have a IotHubName', () => actual.should.containEql('IotHubName'));
+      it('should have a IotHubId', () => actual.should.containEql('IotHubId'));
+      it('should have a IotHubKeyName', () => actual.should.containEql('IotHubKeyName'));
+      it('should have a IotHubKeyResource', () => actual.should.containEql('IotHubKeyResource'));
+      it('should have a ConsumerGroupName', () => actual.should.containEql('ConsumerGroupName'));
+      it('should have a TsiName', () => actual.should.containEql('TsiName'));
+      it('should have a TsiId', () => actual.should.containEql('TsiId'));
     });
 
     context('creates the expected resources', () => {
@@ -35,6 +53,7 @@ describe('iac-tsi-quickstart', () => {
       it('should have 6 resources', () => actual.length.should.be.exactly(6));
       it('should create Microsoft.Storage/storageAccounts', () => actual.should.containEql('Microsoft.Storage/storageAccounts'));
       it('should create Microsoft.Devices/IotHubs', () => actual.should.containEql('Microsoft.Devices/IotHubs'));
+      it('should create Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups', () => actual.should.containEql('Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups'));
       it('should create Microsoft.TimeSeriesInsights/environments', () => actual.should.containEql('Microsoft.TimeSeriesInsights/environments'));
       it('should create Microsoft.TimeSeriesInsights/environments/accesspolicies', () => actual.should.containEql('Microsoft.TimeSeriesInsights/environments/accesspolicies'));
     });
@@ -45,11 +64,16 @@ describe('iac-tsi-quickstart', () => {
       it('should define accessTier', () => should.exist(storage.properties.accessTier));
       it('should define supportsHttpsTrafficOnly', () => should.exist(storage.properties.supportsHttpsTrafficOnly));
       it('should define isHnsEnabled', () => should.exist(storage.properties.isHnsEnabled));
-      it('should enable ADSL Gen2', () => template.variables.IsHnsEnabled.should.be.false());
-      it('should enable HTTPS Only', () => template.variables.SupportsHttpsTrafficOnly.should.be.false());
+
+      it('should specify Standard tier', () => should.exist(storage.sku.tier.should.be.equal("Standard")));
+      it('should specify Blob V2', () => storage.kind.should.be.equal("StorageV2"));
+      it('should specify Hot Tier', () => storage.properties.accessTier.should.be.equal("Hot"));
+
+      it('should disable ADSL Gen2', () => template.parameters.enableADSLGen2.defaultValue.should.be.false());
+      it('should disable HTTPS Only', () => template.variables.SupportsHttpsTrafficOnly.should.be.false());
     });
 
-    context('IoThub has expected properties', () => {
+    context('iothub has expected properties', () => {
       const hub = template.resources.find(resource => resource.type === 'Microsoft.Devices/IotHubs');
 
       it('should specify S3 SKU', () => should.exist(hub.sku.name.should.be.equal("S3")));
@@ -57,7 +81,7 @@ describe('iac-tsi-quickstart', () => {
       it('should specify 1 Instance', () => should.exist(hub.sku.capacity.should.be.equal(1)));
     });
 
-    context('TsiEnvironment has expected properties', () => {
+    context('tsi has expected properties', () => {
       const tsi = template.resources.find(resource => resource.type === 'Microsoft.TimeSeriesInsights/environments');
 
       it('should specify L1 Preview', () => should.exist(tsi.sku.name.should.be.equal("L1")));

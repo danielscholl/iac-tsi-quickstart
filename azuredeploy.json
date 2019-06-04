@@ -30,6 +30,13 @@
         "Premium_LRS"
       ]
     },
+    "enableADSLGen2": {
+      "type": "bool",
+      "metadata": {
+        "description": "Enable ADSL Gen 2"
+      },
+      "defaultValue": false
+    },
     "timeSeriesId": {
       "type": "array",
       "metadata": {
@@ -57,13 +64,6 @@
         "description": "A list of object ids of the users or applications in AAD that should have Reader access to the environment. The service principal objectId can be obtained by calling the Get-AzureRMADUser or the Get-AzureRMADServicePrincipal cmdlets. Creating an access policy for AAD groups is not yet supported."
       }
     },
-    "accessPolicyContributorObjectIds": {
-      "type": "array",
-      "defaultValue": [],
-      "metadata": {
-        "description": "A list of object ids of the users or applications in AAD that should have Contributor access to the environment. The service principal objectId can be obtained by calling the Get-AzureRMADUser or the Get-AzureRMADServicePrincipal cmdlets. Creating an access policy for AAD groups is not yet supported."
-      }
-    },
     "timeSeriesOwnerId": {
       "type": "string",
       "metadata": {
@@ -75,7 +75,6 @@
   "variables": {
     "StorageAccountName": "[concat('tsistorage', parameters('random'))]",
     "StorageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('StorageAccountName'))]",
-    "IsHnsEnabled": false,
     "SupportsHttpsTrafficOnly": false,
     "IotHubName": "[concat('iothub', parameters('random'))]",
     "IotHubId": "[resourceId('Microsoft.Devices/IotHubs', variables('IotHubName'))]",
@@ -104,7 +103,7 @@
       "properties": {
         "accessTier": "Hot",
         "supportsHttpsTrafficOnly": "[variables('SupportsHttpsTrafficOnly')]",
-        "isHnsEnabled": "[variables('IsHnsEnabled')]"
+        "isHnsEnabled": "[parameters('enableADSLGen2')]"
       }
     },
     {
@@ -128,8 +127,8 @@
     {
       "comments": "## Consumer Group ##",
       "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
-      "apiVersion": "2018-04-01",
       "name": "[variables('ConsumerGroupName')]",
+      "apiVersion": "2018-04-01",
       "properties": {},
       "dependsOn": [
         "[resourceId('Microsoft.Devices/IotHubs', variables('iotHubName'))]"
