@@ -4,6 +4,14 @@ Infrastructure as Code using ARM - Time Series Solution using ADSL Gen 2.
 [![Build Status](https://dascholl.visualstudio.com/IoT/_apis/build/status/danielscholl.iac-tsi-quickstart?branchName=master)](https://dascholl.visualstudio.com/IoT/_build/latest?definitionId=28&branchName=master)
 
 
+### Related Repositories
+The solution can be tested with the following Simple Device Simulators
+
+- [iot-device-js](https://github.com/danielscholl/iot-device-js) - Simple Device Testing (NodeJS)
+- [iot-device-net](https://github.com/danielscholl/iot-device-net) - Simple Device Testing (C#)
+
+
+
 ## Provision using portal
 
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fdanielscholl%2Fiac-tsi-quickstart%2Fmaster%2Fazuredeploy.json" target="_blank">
