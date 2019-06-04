@@ -68,8 +68,7 @@
       "type": "string",
       "metadata": {
         "description": "User Object Id to give contributor rights to the subscription used for this deployment."
-      },
-      "defaultValue": ""
+      }
     }
   },
   "variables": {
