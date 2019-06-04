@@ -11,6 +11,9 @@ The solution can be tested with the following Simple Device Simulators
 - [iot-device-net](https://github.com/danielscholl/iot-device-net) - Simple Device Testing (C#)
 
 
+# Provision Infrastructure 
+
+>NOTE:  This can be performed via Portal, Powershell or Bash
 
 ## Provision using portal
 
