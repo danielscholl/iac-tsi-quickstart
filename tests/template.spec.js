@@ -34,10 +34,9 @@ describe('iac-tsi-quickstart', () => {
     context('defines the expected variables', () => {
       const actual = Object.keys(template.variables);
 
-      it('should have 10 variables', () => actual.length.should.be.exactly(10));
+      it('should have 9 variables', () => actual.length.should.be.exactly(9));
       it('should have a StorageAccountName', () => actual.should.containEql('StorageAccountName'));
       it('should have a StorageId', () => actual.should.containEql('StorageId'));
-      it('should have a SupportsHttpsTrafficOnly', () => actual.should.containEql('SupportsHttpsTrafficOnly'));
       it('should have a IotHubName', () => actual.should.containEql('IotHubName'));
       it('should have a IotHubId', () => actual.should.containEql('IotHubId'));
       it('should have a IotHubKeyName', () => actual.should.containEql('IotHubKeyName'));
@@ -69,8 +68,7 @@ describe('iac-tsi-quickstart', () => {
       it('should specify Blob V2', () => storage.kind.should.be.equal("StorageV2"));
       it('should specify Hot Tier', () => storage.properties.accessTier.should.be.equal("Hot"));
 
-      it('should disable ADSL Gen2', () => template.parameters.enableADSLGen2.defaultValue.should.be.false());
-      it('should disable HTTPS Only', () => template.variables.SupportsHttpsTrafficOnly.should.be.false());
+      it('should disable ADSL Gen2 by Default', () => template.parameters.enableADSLGen2.defaultValue.should.be.false());
     });
 
     context('iothub has expected properties', () => {

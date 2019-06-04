@@ -73,7 +73,6 @@
   "variables": {
     "StorageAccountName": "[concat('tsistorage', parameters('random'))]",
     "StorageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('StorageAccountName'))]",
-    "SupportsHttpsTrafficOnly": false,
     "IotHubName": "[concat('iothub', parameters('random'))]",
     "IotHubId": "[resourceId('Microsoft.Devices/IotHubs', variables('IotHubName'))]",
     "IotHubKeyName": "iothubowner",
@@ -100,7 +99,7 @@
       },
       "properties": {
         "accessTier": "Hot",
-        "supportsHttpsTrafficOnly": "[variables('SupportsHttpsTrafficOnly')]",
+        "supportsHttpsTrafficOnly": "[parameters('enableADSLGen2')]",
         "isHnsEnabled": "[parameters('enableADSLGen2')]"
       }
     },
