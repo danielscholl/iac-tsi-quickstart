@@ -8,19 +8,20 @@
   Version History
   v1.0   - Initial Release
 #>
-#Requires -Version 5.1
-#Requires -Module @{ModuleName='AzureRM.Resources'; ModuleVersion='5.0'}
+#Requires -Version 6.2.1
+#Requires -Module @{ModuleName='Az'; ModuleVersion='2.2.0'}
 
 Param(
-  [string]$Subscription = $env:ARM_AZURE_SUBSCRIPTION,
+  [string]$Subscription = $env:ARM_SUBSCRIPTION_ID,
   [string]$Initials = "cat",
   [string]$ResourceGroupName,
   [string]$Location = $env:AZURE_LOCATION,
-  [string] $servicePrincipalAppId = $env:AZURE_PRINCIPAL
+  [string]$ServicePrincipalAppId = $env:AZURE_PRINCIPAL
 )
 
 . ./.env.ps1
-Get-ChildItem Env:*AZURE*
+Get-ChildItem Env:ARM*
+Get-ChildItem Env:AZURE*
 
 if ( !$Subscription) { throw "Subscription Required" }
 if ( !$ResourceGroupName) { $ResourceGroupName = "$Initials-tsi-resources" }
@@ -67,14 +68,19 @@ function Get-ScriptDirectory {
 
 function LoginAzure() {
   Write-Color -Text "Logging in and setting subscription..." -Color Green
-  if ([string]::IsNullOrEmpty($(Get-AzureRmContext).Account)) {
-    if($env:AZURE_TENANT) {
-      Login-AzureRmAccount -TenantId $env:AZURE_TENANT
+  if ([string]::IsNullOrEmpty($(Get-AzContext).Account)) {
+    if($env:ARM_CLIENT_ID) {
+
+      $securePwd = $env:ARM_CLIENT_SECRET | ConvertTo-SecureString 
+      $pscredential = New-Object System.Management.Automation.PSCredential -ArgumentList $env:ARM_CLIENT_ID, $securePwd
+      Connect-AzAccount -ServicePrincipal -Credential $pscredential -TenantId $tenantId
+
+      Login-AzAccount -TenantId $env:AZURE_TENANT
     } else {
-      Login-AzureRmAccount
+      Connect-AzAccount
     }
   }
-  Set-AzureRmContext -SubscriptionId ${Subscription} | Out-null
+  Set-AzContext -SubscriptionId ${Subscription} | Out-null
 
 }
 
@@ -82,30 +88,31 @@ function CreateResourceGroup([string]$ResourceGroupName, [string]$Location) {
   # Required Argument $1 = RESOURCE_GROUP
   # Required Argument $2 = LOCATION
 
-  $group = Get-AzureRmResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+  $group = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
   if($group) {
     Write-Color -Text "Resource Group ", "$ResourceGroupName ", "already exists." -Color Green, Red, Green
   } else {
     Write-Host "Creating Resource Group $ResourceGroupName..." -ForegroundColor Yellow
 
     $UNIQUE = Get-Random -Minimum 0 -Maximum 999
-    New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -Tag @{ RANDOM=$UNIQUE; contact=$Initials }
+    New-AzResourceGroup -Name $ResourceGroupName -Location $Location -Tag @{ RANDOM=$UNIQUE; contact=$Initials }
   }
 }
 
 function ResourceProvider([string]$ProviderNamespace) {
   # Required Argument $1 = RESOURCE
 
-  $result = Get-AzureRmResourceProvider -ProviderNamespace $ProviderNamespace | Where-Object -Property RegistrationState -eq "Registered"
+  $result = Get-AzResourceProvider -ProviderNamespace $ProviderNamespace | Where-Object -Property RegistrationState -eq "Registered"
 
   if ($result) {
     Write-Color -Text "Provider ", "$ProviderNamespace ", "already registered." -Color Green, Red, Green
   }
   else {
     Write-Host "Registering Provider $ProviderNamespace..." -ForegroundColor Yellow
-    Register-AzureRmResourceProvider -ProviderNamespace $ProviderNamespace
+    Register-AzResourceProvider -ProviderNamespace $ProviderNamespace
   }
 }
+
 
 ###############################
 ## Azure Initialize           ##
@@ -114,20 +121,25 @@ $BASE_DIR = Get-ScriptDirectory
 $DEPLOYMENT = Split-Path $BASE_DIR -Leaf
 LoginAzure
 
+
 $UNIQUE = CreateResourceGroup $ResourceGroupName $Location
 ResourceProvider Microsoft.Storage
 ResourceProvider Microsoft.Devices
 ResourceProvider Microsoft.TimeSeriesInsights
 
+
+
 Write-Color -Text "Gathering Service Principal..." -Color Green
-if ($servicePrincipalAppId) {
+if ($ServicePrincipalAppId) {
   $ID = $servicePrincipalAppId
 }
 else {
-  $ACCOUNT = $(Get-AzureRmContext).Account
+  $ACCOUNT = $(Get-AzContext).Account
   if ($ACCOUNT.Type -eq 'User') {
-    $USER = Get-AzureRmADUser -UPN $(Get-AzureRmContext).Account
-    $ID = $USER.Id.Guid
+    $UPN = $(Get-AzContext).Account.Id
+    $USER = Get-AzureADUser -Filter "userPrincipalName eq '$UPN'"
+    $ID = $USER.ObjectId
+    Write-Color -Text "User Object Id: ", "$ID ", "detected" -Color Green, Red, Green
   }
   else {
     $ID = Read-Host 'Input your Service Principal.'
@@ -140,10 +152,10 @@ else {
 Write-Color -Text "`r`n---------------------------------------------------- "-Color Yellow
 Write-Color -Text "Deploying ", "$DEPLOYMENT ", "template..." -Color Green, Red, Green
 Write-Color -Text "---------------------------------------------------- "-Color Yellow
-New-AzureRmResourceGroupDeployment -Name $DEPLOYMENT `
+New-AzResourceGroupDeployment -Name $DEPLOYMENT `
   -TemplateFile $BASE_DIR\azuredeploy.json `
   -TemplateParameterFile $BASE_DIR\azuredeploy.parameters.json `
   -initials $INITIALS `
   -timeSeriesOwnerId $ID `
-  -random $(Get-AzureRmResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue -WarningAction SilentlyContinue).Tags.RANDOM `
+  -random $(Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue -WarningAction SilentlyContinue).Tags.RANDOM `
   -ResourceGroupName $ResourceGroupName

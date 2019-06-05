@@ -53,7 +53,11 @@ function CreateResourceGroup() {
   local _result=$(az group show --name $1)
   if [ "$_result"  == "" ]
     then
-      UNIQUE=$(shuf -i 100-999 -n 1)
+      if [ "$(uname)" == "Darwin" ]; then
+        UNIQUE=$(jot -r 1 100 999)
+      else
+        UNIQUE=$(shuf -i 100-999 -n 1)
+      fi
       OUTPUT=$(az group create --name $1 \
         --location $2 \
         --tags RANDOM=$UNIQUE contact=$INITIALS \
@@ -99,6 +103,7 @@ DEPLOYMENT=${PWD##*/}
 USER_ID=$(az ad user show \
         --upn-or-object-id $(az account show --query user.name -otsv) \
         --query objectId -otsv)
+
 
 tput setaf 2; echo 'Deploying ARM Template...' ; tput sgr0
 az group deployment create --template-file azuredeploy.json  \

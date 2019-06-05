@@ -13,7 +13,7 @@ The solution can be tested with the following Simple Device Simulators
 
 # Provision Infrastructure 
 
->NOTE:  This can be performed via Portal, Powershell or Bash
+>NOTE:  This can be performed via Portal UI or CloudShell (Bash/Powershell)
 
 ## Provision using portal
 
