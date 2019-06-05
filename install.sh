@@ -20,7 +20,7 @@ if [ -z $INITIALS ]; then
 fi
 
 if [ -z $ARM_SUBSCRIPTION_ID ]; then
-  tput setaf 1; echo 'ERROR: AZURE_SUBSCRIPTION not provided' ; tput sgr0
+  tput setaf 1; echo 'ERROR: ARM_SUBSCRIPTION_ID not provided' ; tput sgr0
   usage;
 fi
 
