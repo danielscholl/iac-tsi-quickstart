@@ -14,6 +14,7 @@ Default Environment Settings
 | --------------------  | ------------------------------------ | ---------------------------------------- |
 | _ARM_SUBSCRIPTION_ID_ | xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx | Azure Subscription Id                    |
 | _AZURE_LOCATION_      | CentralUS                            | Azure Region for Resources to be located |
+| _AZURE_USER_ID_       |                                      | User Object ID for TSI Contributor       |
 
 
 ### Related Repositories

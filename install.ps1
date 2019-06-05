@@ -16,7 +16,7 @@ Param(
   [string]$Initials = "cat",
   [string]$ResourceGroupName,
   [string]$Location = $env:AZURE_LOCATION,
-  [string]$ServicePrincipalAppId = $env:AZURE_PRINCIPAL
+  [string]$ServicePrincipalAppId = $env:AZURE_USER_ID
 )
 
 . ./.env.ps1
@@ -94,7 +94,7 @@ function CreateResourceGroup([string]$ResourceGroupName, [string]$Location) {
   } else {
     Write-Host "Creating Resource Group $ResourceGroupName..." -ForegroundColor Yellow
 
-    $UNIQUE = Get-Random -Minimum 0 -Maximum 999
+    $UNIQUE = Get-Random -Minimum 100 -Maximum 999
     New-AzResourceGroup -Name $ResourceGroupName -Location $Location -Tag @{ RANDOM=$UNIQUE; contact=$Initials }
   }
 }
@@ -113,6 +113,26 @@ function ResourceProvider([string]$ProviderNamespace) {
   }
 }
 
+function UserId() {
+  Write-Color -Text "Retrieving User Object Id..." -Color Green
+  if ($ServicePrincipalAppId) {
+    $ID = $servicePrincipalAppId
+  }
+  else {
+    $ACCOUNT = $(Get-AzContext).Account
+    if ($ACCOUNT.Type -eq 'User' -or $ACCOUNT.Type -eq 'ManagedService') {
+      $UPN = $(Get-AzContext).Account.Id
+      $USER = Get-AzureADUser -Filter "userPrincipalName eq '$UPN'"
+      $ID = $USER.ObjectId
+    }
+    else {
+      $ID = Read-Host 'Input your Service Principal.'
+    }
+  }
+  Write-Color -Text "User Object Id: ", "$ID ", "detected" -Color Green, Red, Green
+  return $ID
+}
+
 
 ###############################
 ## Azure Initialize           ##
@@ -121,30 +141,13 @@ $BASE_DIR = Get-ScriptDirectory
 $DEPLOYMENT = Split-Path $BASE_DIR -Leaf
 LoginAzure
 
-
 $UNIQUE = CreateResourceGroup $ResourceGroupName $Location
+
 ResourceProvider Microsoft.Storage
 ResourceProvider Microsoft.Devices
 ResourceProvider Microsoft.TimeSeriesInsights
 
-
-
-Write-Color -Text "Gathering Service Principal..." -Color Green
-if ($ServicePrincipalAppId) {
-  $ID = $servicePrincipalAppId
-}
-else {
-  $ACCOUNT = $(Get-AzContext).Account
-  if ($ACCOUNT.Type -eq 'User' -or $ACCOUNT.Type -eq 'ManagedService') {
-    $UPN = $(Get-AzContext).Account.Id
-    $USER = Get-AzureADUser -Filter "userPrincipalName eq '$UPN'"
-    $ID = $USER.ObjectId
-    Write-Color -Text "User Object Id: ", "$ID ", "detected" -Color Green, Red, Green
-  }
-  else {
-    $ID = Read-Host 'Input your Service Principal.'
-  }
-}
+$ID = UserId
 
 ##############################
 ## Deploy Template          ##
