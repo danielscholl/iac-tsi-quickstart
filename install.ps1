@@ -68,7 +68,7 @@ function Get-ScriptDirectory {
 
 function LoginAzure() {
   Write-Color -Text "Logging in and setting subscription..." -Color Green
-  if ([string]::IsNullOrEmpty($(Get-AzContext).Account)) {
+  if ([string]::IsNullOrEmpty($(Get-AzContext).Account.Id)) {
     if($env:ARM_CLIENT_ID) {
 
       $securePwd = $env:ARM_CLIENT_SECRET | ConvertTo-SecureString 
@@ -135,7 +135,7 @@ if ($ServicePrincipalAppId) {
 }
 else {
   $ACCOUNT = $(Get-AzContext).Account
-  if ($ACCOUNT.Type -eq 'User') {
+  if ($ACCOUNT.Type -eq 'User' -or $ACCOUNT.Type -eq 'ManagedService') {
     $UPN = $(Get-AzContext).Account.Id
     $USER = Get-AzureADUser -Filter "userPrincipalName eq '$UPN'"
     $ID = $USER.ObjectId
