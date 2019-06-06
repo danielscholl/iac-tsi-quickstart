@@ -80,7 +80,7 @@ function LoginAzure() {
       Connect-AzAccount
     }
   }
-  Set-AzContext -SubscriptionId ${Subscription} | Out-null
+  Set-AzContext -SubscriptionId $env:ARM_SUBSCRIPTION_ID | Out-null
 
 }
 
