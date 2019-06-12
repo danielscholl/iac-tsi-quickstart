@@ -22,7 +22,7 @@
       "metadata": {
         "description": "Account type, premium vs standard, and local, global redundancy"
       },
-      "defaultValue": "Standard_LRS",
+      "defaultValue": "Standard_GRS",
       "allowedValues": [
         "Standard_LRS",
         "Standard_GRS",
@@ -118,8 +118,7 @@
         "tier": "Standard",
         "capacity": 1
       },
-      "properties": {
-      }
+      "properties": {}
     },
     {
       "comments": "## Consumer Group ##",

@@ -14,10 +14,11 @@ usage() { echo "Usage: install.sh " 1>&2; exit 1; }
 
 if [ -f ./.envrc ]; then source ./.envrc; fi
 
-if [ ! -z $1 ]; then INITIALS=$1; fi
-if [ -z $INITIALS ]; then
-  INITIALS="cat"
+if [ ! -z $1 ]; then PROJECT_INITIALS=$1; fi
+if [ -z $PROJECT_INITIALS ]; then
+  PROJECT_INITIALS="CAT"
 fi
+
 
 if [ -z $ARM_SUBSCRIPTION_ID ]; then
   tput setaf 1; echo 'ERROR: ARM_SUBSCRIPTION_ID not provided' ; tput sgr0
@@ -90,7 +91,7 @@ tput setaf 2; echo 'Logging in and setting subscription...' ; tput sgr0
 az account set --subscription ${ARM_SUBSCRIPTION_ID}
 
 tput setaf 2; echo 'Creating Resource Group...' ; tput sgr0
-RESOURCE_GROUP="$INITIALS-tsi-resources"
+RESOURCE_GROUP="$PROJECT_INITIALS-tsi-resources"
 CreateResourceGroup $RESOURCE_GROUP $AZURE_LOCATION
 
 tput setaf 2; echo 'Registering Resource Provider...' ; tput sgr0
@@ -109,5 +110,6 @@ tput setaf 2; echo 'Deploying ARM Template...' ; tput sgr0
 az group deployment create --template-file azuredeploy.json  \
     --name $DEPLOYMENT \
     --resource-group $RESOURCE_GROUP \
+    --parameters azuredeploy.parameters.json \
     --parameters timeSeriesOwnerId=$USER_ID \
-    --parameters initials=$INITIALS --parameters random=$UNIQUE
+    --parameters initials=$PROJECT_INITIALS --parameters random=$UNIQUE
