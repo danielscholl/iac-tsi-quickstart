@@ -17,29 +17,20 @@ Default Environment Settings
 | _AZURE_USER_ID_       |                                      | User Object ID for TSI Contributor       |
 
 
-### Related Repositories
-The solution can be tested with the following Simple Device Simulators
+### Provision Infrastructure 
 
-- [iot-device-js](https://github.com/danielscholl/iot-device-js) - Simple Device Testing (NodeJS)
-- [iot-device-net](https://github.com/danielscholl/iot-device-net) - Simple Device Testing (C#)
+>Note:  This can be performed via Portal UI or CloudShell (Bash/Powershell)
 
-
-# Provision Infrastructure 
-
->NOTE:  This can be performed via Portal UI or CloudShell (Bash/Powershell)
-
-## Provision using portal
+__Provision using portal__
 
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fdanielscholl%2Fiac-tsi-quickstart%2Fmaster%2Fazuredeploy.json" target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
 
 
-## Provision using bash
+__Provision using bash__
 
-__PreRequisites__
-
-Requires the use of [direnv](https://direnv.net/)
+>Note:  Requires the use of [direnv](https://direnv.net/)
 
 1. Run Install Script for ARM Process
 
@@ -49,12 +40,9 @@ initials="<your_initials>"
 install.sh $initials
 ```
 
+__Provision using powershell__
 
-## Provision using powershell
-
-__PreRequisites__
-
-Requires the use of [powershell](https://docs.microsoft.com/en-us/powershell/scripting/overview?view=powershell-6)
+>Note:  Requires the use of [powershell](https://docs.microsoft.com/en-us/powershell/scripting/overview?view=powershell-6)
 
 1. Run Install Script for ARM Process
 
@@ -64,26 +52,18 @@ $initials = "<your_initials>"
 install.ps1 -Initials $initials
 ```
 
+### Configure Access Rights to the Registry
 
-# Test and Provision
+This project provides a Container Registry.  It is important that an Access Control Role Assignment be setup with a Service Principal with a Reader Role for projects to be able to pull from the registry.
+
+
+### Test the Solution (Optional)
 
 >NOTE:  THIS CAN ONLY BE DONE FROM A LINUX SHELL!!
 
-1. Manually run the test suite
+Manually run the test suite
 
 ```bash
 npm install
 npm test
 ```
-
-2. Manually provision the infrastructure.
-
-```bash
-# Provision the infrastructure
-npm run provision
-```
-
-# Azure Container Registry
-
-This project provides a Container Registry.  It is important that an Access Control Role Assignment be setup with a Service Principal with a Reader Role for projects to be able to pull from the registry.
-
