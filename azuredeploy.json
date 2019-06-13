@@ -79,7 +79,8 @@
     "IotHubKeyResource": "[resourceId('Microsoft.Devices/Iothubs/Iothubkeys', variables('iotHubName'), variables('IotHubKeyName'))]",
     "ConsumerGroupName": "[concat(variables('iotHubName'), '/events/tsi')]",
     "TsiName": "[concat('timeseries', parameters('random'))]",
-    "TsiId": "[resourceId('Microsoft.TimeSeriesInsights/Environments', variables('TsiName'))]"
+    "TsiId": "[resourceId('Microsoft.TimeSeriesInsights/Environments', variables('TsiName'))]",
+    "registryName": "[concat('registry', parameters('random'))]"
   },
   "resources": [
     {
@@ -208,6 +209,24 @@
           "Contributor"
         ]
       }
+    },
+    {
+      "comments": "## Container Registry ##",
+      "name": "[variables('registryName')]",
+      "type": "Microsoft.ContainerRegistry/registries",
+      "apiVersion": "2017-10-01",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [],
+      "tags": {
+        "contact": "[parameters('initials')]"
+      },
+      "sku": {
+        "name": "Standard",
+        "tier": "Standard"
+      },
+      "properties": {
+        "adminUserEnabled": false
+      }
     }
   ],
   "outputs": {
@@ -230,6 +249,13 @@
       "type": "object",
       "value": {
         "id": "[variables('TsiId')]"
+      }
+    },
+    "containerRegistry": {
+      "type": "object",
+      "value": {
+        "id": "[reference(resourceId('Microsoft.ContainerRegistry/registries',variables('registryName')),'2017-10-01').loginServer]",
+        "name": "[variables('registryName')]"
       }
     }
   }
