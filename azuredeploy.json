@@ -75,12 +75,11 @@
     "StorageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('StorageAccountName'))]",
     "IotHubName": "[concat('iothub', parameters('random'))]",
     "IotHubId": "[resourceId('Microsoft.Devices/IotHubs', variables('IotHubName'))]",
-    "IotHubKeyName": "iothubowner",
-    "IotHubKeyResource": "[resourceId('Microsoft.Devices/Iothubs/Iothubkeys', variables('iotHubName'), variables('IotHubKeyName'))]",
     "ConsumerGroupName": "[concat(variables('iotHubName'), '/events/tsi')]",
     "TsiName": "[concat('timeseries', parameters('random'))]",
     "TsiId": "[resourceId('Microsoft.TimeSeriesInsights/Environments', variables('TsiName'))]",
-    "registryName": "[concat('registry', parameters('random'))]"
+    "RegistryName": "[concat('registry', parameters('random'))]",
+    "InsightsName": "[concat('insights', parameters('random'))]"
   },
   "resources": [
     {
@@ -212,7 +211,7 @@
     },
     {
       "comments": "## Container Registry ##",
-      "name": "[variables('registryName')]",
+      "name": "[variables('RegistryName')]",
       "type": "Microsoft.ContainerRegistry/registries",
       "apiVersion": "2017-10-01",
       "location": "[resourceGroup().location]",
@@ -226,6 +225,15 @@
       },
       "properties": {
         "adminUserEnabled": false
+      }
+    },
+    {
+      "apiVersion": "2014-04-01",
+      "name": "[variables('InsightsName')]",
+      "type": "Microsoft.Insights/components",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "ApplicationId": "[variables('InsightsName')]"
       }
     }
   ],
@@ -254,8 +262,8 @@
     "containerRegistry": {
       "type": "object",
       "value": {
-        "id": "[reference(resourceId('Microsoft.ContainerRegistry/registries',variables('registryName')),'2017-10-01').loginServer]",
-        "name": "[variables('registryName')]"
+        "id": "[reference(resourceId('Microsoft.ContainerRegistry/registries',variables('RegistryName')),'2017-10-01').loginServer]",
+        "name": "[variables('RegistryName')]"
       }
     }
   }

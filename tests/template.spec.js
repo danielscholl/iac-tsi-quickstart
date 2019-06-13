@@ -39,22 +39,24 @@ describe('iac-tsi-quickstart', () => {
       it('should have a StorageId', () => actual.should.containEql('StorageId'));
       it('should have a IotHubName', () => actual.should.containEql('IotHubName'));
       it('should have a IotHubId', () => actual.should.containEql('IotHubId'));
-      it('should have a IotHubKeyName', () => actual.should.containEql('IotHubKeyName'));
-      it('should have a IotHubKeyResource', () => actual.should.containEql('IotHubKeyResource'));
       it('should have a ConsumerGroupName', () => actual.should.containEql('ConsumerGroupName'));
       it('should have a TsiName', () => actual.should.containEql('TsiName'));
       it('should have a TsiId', () => actual.should.containEql('TsiId'));
+      it('should have a RegistryName', () => actual.should.containEql('RegistryName'));
+      it('should have a InsightsName', () => actual.should.containEql('InsightsName'));
     });
 
     context('creates the expected resources', () => {
       const actual = template.resources.map(resource => resource.type);
 
-      it('should have 6 resources', () => actual.length.should.be.exactly(6));
+      it('should have 8 resources', () => actual.length.should.be.exactly(8));
       it('should create Microsoft.Storage/storageAccounts', () => actual.should.containEql('Microsoft.Storage/storageAccounts'));
       it('should create Microsoft.Devices/IotHubs', () => actual.should.containEql('Microsoft.Devices/IotHubs'));
       it('should create Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups', () => actual.should.containEql('Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups'));
       it('should create Microsoft.TimeSeriesInsights/environments', () => actual.should.containEql('Microsoft.TimeSeriesInsights/environments'));
       it('should create Microsoft.TimeSeriesInsights/environments/accesspolicies', () => actual.should.containEql('Microsoft.TimeSeriesInsights/environments/accesspolicies'));
+      it('should create Microsoft.ContainerRegistry/registries', () => actual.should.containEql('Microsoft.ContainerRegistry/registries'));
+      it('should create Microsoft.Insights/components', () => actual.should.containEql('Microsoft.Insights/components'));
     });
 
     context('storage has expected properties', () => {
