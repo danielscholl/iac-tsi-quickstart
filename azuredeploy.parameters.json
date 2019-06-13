@@ -5,7 +5,7 @@
         "timeSeriesId": {
             "value": [
                 {
-                    "name": "deviceId",
+                    "name": "iothub-connection-device-id",
                     "type": "string"
                 }
             ]

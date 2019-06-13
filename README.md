@@ -83,12 +83,7 @@ npm test
 npm run provision
 ```
 
-# Azure Pipelines
+# Azure Container Registry
 
-1. Build Definition
+This project provides a Container Registry.  It is important that an Access Control Role Assignment be setup with a Service Principal with a Reader Role for projects to be able to pull from the registry.
 
-    This project uses YAML builds.  A build would typically be created automatically but if not then a new Definition can be created and then import the `azure-pipelins.yml` YAML build file.
-
-    - Ensure that the proper Project Level Service Connection exists to be able to utilize the desired Subscription
-
-  
