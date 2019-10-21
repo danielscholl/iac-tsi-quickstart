@@ -34,7 +34,7 @@
       "metadata": {
         "description": "Enable ADSL Gen 2"
       },
-      "defaultValue": false
+      "defaultValue": true
     },
     "timeSeriesId": {
       "type": "array",
@@ -58,7 +58,8 @@
     },
     "accessPolicyReaderObjectIds": {
       "type": "array",
-      "defaultValue": [],
+      "defaultValue": [
+      ],
       "metadata": {
         "description": "A list of object ids of the users or applications in AAD that should have Reader access to the environment. The service principal objectId can be obtained by calling the Get-AzureRMADUser or the Get-AzureRMADServicePrincipal cmdlets. Creating an access policy for AAD groups is not yet supported."
       }
@@ -79,7 +80,12 @@
     "TsiName": "[concat('timeseries', parameters('random'))]",
     "TsiId": "[resourceId('Microsoft.TimeSeriesInsights/Environments', variables('TsiName'))]",
     "RegistryName": "[concat('registry', parameters('random'))]",
-    "InsightsName": "[concat('insights', parameters('random'))]"
+    "InsightsName": "[concat('insights', parameters('random'))]",
+    "NameSpaceName": "[concat('eventhub', parameters('random'))]",
+    "HubName": "ingest",
+    "NameSpaceId": "[resourceId('Microsoft.EventHub/Namespaces/EventHubs', variables('NameSpaceName'), variables('HubName'))]",
+    "defaultSASKeyName": "RootManageSharedAccessKey",
+    "authRuleResourceId": "[resourceId('Microsoft.EventHub/namespaces/authorizationRules', variables('NameSpaceName'), variables('defaultSASKeyName'))]"
   },
   "resources": [
     {
@@ -101,7 +107,94 @@
         "accessTier": "Hot",
         "supportsHttpsTrafficOnly": "[parameters('enableADSLGen2')]",
         "isHnsEnabled": "[parameters('enableADSLGen2')]"
-      }
+      },
+      "resources": [
+        {
+          "name": "[concat('default/', 'capture')]",
+          "type": "blobServices/containers",
+          "apiVersion": "2018-07-01",
+          "dependsOn": [
+            "[variables('storageAccountName')]"
+          ]
+        }
+      ]
+    },
+    {
+      "comments": "## Event Hub ##",
+      "name": "[variables('NamespaceName')]",
+      "apiVersion": "2017-04-01",
+      "type": "Microsoft.EventHub/namespaces",
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', variables('StorageAccountName'))]"
+      ],
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Standard",
+        "tier": "Standard",
+        "capacity": 1
+      },
+      "tags": {
+        "contact": "[parameters('initials')]"
+      },
+      "properties": {
+      },
+      "resources": [
+        {
+          "apiVersion": "2017-04-01",
+          "name": "[variables('HubName')]",
+          "type": "eventhubs",
+          "dependsOn": [
+            "[concat('Microsoft.EventHub/namespaces/', variables('NameSpaceName'))]"
+          ],
+          "properties": {
+            "messageRetentionInDays": 1,
+            "partitionCount": 4,
+            "captureDescription": {
+              "enabled": true,
+              "skipEmptyArchives": false,
+              "encoding": "Avro",
+              "intervalInSeconds": 300,
+              "sizeLimitInBytes": 314572800,
+              "destination": {
+                "name": "EventHubArchive.AzureBlockBlob",
+                "properties": {
+                  "storageAccountResourceId": "[variables('storageId')]",
+                  "blobContainer": "capture",
+                  "archiveNameFormat": "{Namespace}/{EventHub}/{PartitionId}/{Year}/{Month}/{Day}/{Hour}/{Minute}/{Second}"
+                }
+              }
+            }
+          },
+          "resources": [
+            {
+              "apiVersion": "2017-04-01",
+              "type": "authorizationRules",
+              "name": "simulator",
+              "location": "[resourceGroup().location]",
+              "dependsOn": [
+                "[variables('HubName')]"
+              ],
+              "properties": {
+                "rights": [
+                  "Listen",
+                  "Send"
+                ]
+              }
+            },
+            {
+              "apiVersion": "2017-04-01",
+              "name": "tsi",
+              "type": "consumergroups",
+              "dependsOn": [
+                "[variables('HubName')]"
+              ],
+              "properties": {
+                "userMetadata": "User Metadata goes here"
+              }
+            }
+          ]
+        }
+      ]
     },
     {
       "comments": "## IoT Hub ##",
@@ -118,14 +211,16 @@
         "tier": "Standard",
         "capacity": 1
       },
-      "properties": {}
+      "properties": {
+      }
     },
     {
       "comments": "## Consumer Group ##",
       "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
       "name": "[variables('ConsumerGroupName')]",
       "apiVersion": "2018-04-01",
-      "properties": {},
+      "properties": {
+      },
       "dependsOn": [
         "[resourceId('Microsoft.Devices/IotHubs', variables('iotHubName'))]"
       ]
@@ -172,6 +267,29 @@
             "sharedAccessKey": "[listkeys(resourceId('Microsoft.Devices/IoTHubs/IotHubKeys', variables('IoTHubName'), 'service'), '2018-04-01').primaryKey]",
             "timestampPropertyName": "[parameters('timeSeriesTimeStamp')]"
           }
+        },
+        {
+          "type": "eventsources",
+          "name": "[variables('NameSpaceName')]",
+          "apiVersion": "2018-08-15-preview",
+          "location": "[resourceGroup().location]",
+          "kind": "Microsoft.EventHub",
+          "dependsOn": [
+            "[resourceId('Microsoft.TimeSeriesInsights/environments/', variables('TsiName'))]",
+            "[resourceId('Microsoft.EventHub/Namespaces', variables('NameSpaceName'))]",
+            "[concat('Microsoft.Storage/storageAccounts/', variables('StorageAccountName'))]",
+            "[resourceId('Microsoft.EventHub/Namespaces/EventHubs/ConsumerGroups', variables('NameSpaceName'), variables('HubName'), 'tsi')]",
+            "[resourceId('Microsoft.EventHub/Namespaces/EventHubs/AuthorizationRules', variables('NameSpaceName'), variables('HubName'), 'simulator')]"
+          ],
+          "properties": {
+            "eventSourceResourceId": "[variables('NameSpaceId')]",
+            "eventHubName": "[variables('HubName')]",
+            "serviceBusNamespace": "[variables('NameSpaceName')]",
+            "consumerGroupName": "tsi",
+            "keyName": "simulator",
+            "sharedAccessKey": "[listkeys(resourceId('Microsoft.EventHub/Namespaces/EventHubs/AuthorizationRules', variables('NameSpaceName'), variables('HubName'), 'simulator'), '2017-04-01').primaryKey]",
+            "timestampPropertyName": "[parameters('timeSeriesTimeStamp')]"
+          }
         }
       ]
     },
@@ -215,7 +333,8 @@
       "type": "Microsoft.ContainerRegistry/registries",
       "apiVersion": "2017-10-01",
       "location": "[resourceGroup().location]",
-      "dependsOn": [],
+      "dependsOn": [
+      ],
       "tags": {
         "contact": "[parameters('initials')]"
       },
@@ -264,6 +383,13 @@
       "value": {
         "id": "[reference(resourceId('Microsoft.ContainerRegistry/registries',variables('RegistryName')),'2017-10-01').loginServer]",
         "name": "[variables('RegistryName')]"
+      }
+    },
+    "eventHub": {
+      "type": "object",
+      "value": {
+        "connectionString": "[listkeys(variables('authRuleResourceId'), '2017-04-01').primaryConnectionString]",
+        "primaryKey": "[listkeys(variables('authRuleResourceId'), '2017-04-01').primaryKey]"
       }
     }
   }

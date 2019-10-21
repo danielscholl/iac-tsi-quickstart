@@ -1,5 +1,5 @@
 # Introduction
-Infrastructure as Code using ARM - Time Series Solution using ADSL Gen 2.
+Infrastructure as Code using ARM - Time Series Solution using ADSL Gen 2 with IoT Hub or Event Hubs.
 
 [![Build Status](https://dascholl.visualstudio.com/IoT/_apis/build/status/danielscholl.iac-tsi-quickstart?branchName=master)](https://dascholl.visualstudio.com/IoT/_build/latest?definitionId=28&branchName=master)
 
@@ -29,18 +29,6 @@ __Provision using portal__
 </a>
 
 
-__Provision using bash__
-
->Note:  Requires the use of [direnv](https://direnv.net/)
-
-1. Run Install Script for ARM Process
-
-```bash
-# Initialize the Modules
-initials="<your_initials>"
-install.sh $initials
-```
-
 __Provision using powershell__
 
 >Note:  Requires the use of [powershell](https://docs.microsoft.com/en-us/powershell/scripting/overview?view=powershell-6)
@@ -50,7 +38,8 @@ __Provision using powershell__
 ```bash
 # Initialize the Modules
 $initials = "<your_initials>"
-install.ps1 -Initials $initials
+./install.ps1 -Show true
+./install.ps1 -Initials $initials
 ```
 
 ### Configure Access Rights to the Registry
@@ -58,13 +47,8 @@ install.ps1 -Initials $initials
 This project provides a Container Registry.  It is important that an Access Control Role Assignment be setup with a Service Principal with a Reader Role for projects to be able to pull from the registry.
 
 
-### Test the Solution (Optional)
+### Generate Data with a simulator
 
->NOTE:  THIS CAN ONLY BE DONE FROM A LINUX SHELL!!
+You can use the [Windfarm Simulator](https://tsiclientsample.azurewebsites.net/windFarmGen.html) to generate data to the `Ingest` Event Hub.
 
-Manually run the test suite
-
-```bash
-npm install
-npm test
-```
+Examples of how to model the data in TSI are located here [https://github.com/danielscholl/iot-tsi-api](https://github.com/danielscholl/iot-tsi-api)
