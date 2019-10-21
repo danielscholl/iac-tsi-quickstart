@@ -19,7 +19,7 @@ Default Environment Settings
 
 ### Provision Infrastructure 
 
->Note:  This can be performed via Portal UI or CloudShell (Bash/Powershell)
+>Note:  This can be performed via Portal UI or CloudShell (Powershell)
 
 __Provision using portal__
 
@@ -51,4 +51,4 @@ This project provides a Container Registry.  It is important that an Access Cont
 
 You can use the [Windfarm Simulator](https://tsiclientsample.azurewebsites.net/windFarmGen.html) to generate data to the `Ingest` Event Hub.
 
-Examples of how to model the data in TSI are located here [https://github.com/danielscholl/iot-tsi-api](https://github.com/danielscholl/iot-tsi-api)
+Examples of how to model the data in TSI are located in this sample [iot-tsi-api](https://github.com/danielscholl/iot-tsi-api) repository.
